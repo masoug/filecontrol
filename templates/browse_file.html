@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load sizeof_fmt %}
+
+    {% block content %}
+      
+      {% include "breadcrumbs.html" %}
+      
+      <h2>
+        {{ fnode.visibleName }}
+      </h2>
+        
+        <table class="table">
+          <tr><td><strong>File Size:</strong></td><td>{{ fnode.fileSize | sizeof_fmt }}</td></tr>
+          <tr><td><strong>Uploaded On:</strong></td><td>August 31, 1995 12:30pm (PST)</td></tr>
+          <tr><td><strong>Last Modified:</strong></td><td>August 31, 1995 12:30pm (PST)</td></tr>
+          <tr><td><strong>UUID:</strong></td><td>{{ fnode.nodeID }}</td></tr>
+          <tr><td><strong>SHA-256 HMAC:</strong></td><td>{{ fnode.fileSignature }}</td></tr>
+          <tr><td><strong>MIME Type:</strong></td><td>{{ fnode.mimeType }}</td></tr>
+          <tr><td><strong>Backup Mirror:</strong></td><td>
+            <a href="https://app.box.com/s/uw8keex3k0j7d98gy0ha" target="_blank">https://app.box.com/s/uw8keex3k0j7d98gy0ha</a>
+            &nbsp;(<a href="">About mirrored files</a>)
+          </td></tr>
+          <tr><td><strong>Slug:</strong></td><td>
+            <form role="form" class="form-inline">
+              <div class="form-group" />
+                <input type="text" class="form-control" name="slug_value" value="my-file" />
+              </div>
+              <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+          </td></tr>
+          <tr><td><strong>Rename:</strong></td><td>
+            <form role="form" action="{% url 'rename' %}" method="POST" class="form-inline">
+              {% csrf_token %}
+              <div class="form-group">
+                <input type="hidden" name="node_ID" value="{{ fnode.nodeID }}" />
+                <input type="text" class="form-control" name="new_name" value="{{ fnode.visibleName }}"/>
+              </div>
+              <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;Rename</button>
+            </form>
+          </td></tr>
+          <tr><td><strong>Re-Parent:</strong></td><td>
+            <form role="form" class="form-inline">
+              <div class="form-group" />
+                <input type="text" class="form-control" name="parent_value" value="00000000000000000000000000000000" />
+              </div>
+              <button type="submit" class="btn btn-primary">Re-Parent</button>
+            </form>
+          </td></tr>
+          <tr><td><strong>Download:</strong></td><td>
+            <form role="form" class="form-inline">
+              <button type="submit" class="btn btn-success"><span class="glyphicon glyphicon-download"></span>&nbsp;&nbsp;Download</button>
+            </form>
+          </td></tr>         
+          <tr><td><strong>Delete:</strong></td><td>
+            <form role="form" action="{% url 'delete' %}" method="POST" class="form-inline">
+              {% csrf_token %}
+              <input type="hidden" name="node_ID" value="{{ fnode.nodeID }}" />
+              <div class="form-group">
+                {{ captcha_code | safe }}
+              </div>
+              <button type="submit" class="btn btn-danger"/><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Delete</button>
+            </form>
+          </td></tr>
+          <tr><td><strong>Access Controls:</strong></td><td>
+            <form role="form">
+              <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-share"></span>&nbsp;&nbsp;Share</button>
+            </form>
+          </td></tr>
+        </table>
+    {% endblock %}
