@@ -1,6 +1,7 @@
 <ol class="breadcrumb">
-  <li><a href="#">Home</a></li>
-  <li><a href="#">Derp</a></li>
-  <li class="active">Lerp</li>
+  <li><a href="{% url 'file_app.views.index' %}">Home</a></li>
+  {% for d in breadcrumbs %}
+    <li><a href="{% url 'file_app.views.browse' d.nodeID %}">{{ d.visibleName }}</a></li>
+  {% endfor %}
 </ol>
 

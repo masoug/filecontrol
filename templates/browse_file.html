@@ -5,14 +5,14 @@
       
       {% include "breadcrumbs.html" %}
       
-      <h2>
+      <h3>
         {{ fnode.visibleName }}
-      </h2>
+      </h3>
         
         <table class="table">
           <tr><td><strong>File Size:</strong></td><td>{{ fnode.fileSize | sizeof_fmt }}</td></tr>
-          <tr><td><strong>Uploaded On:</strong></td><td>August 31, 1995 12:30pm (PST)</td></tr>
-          <tr><td><strong>Last Modified:</strong></td><td>August 31, 1995 12:30pm (PST)</td></tr>
+          <tr><td><strong>Created On:</strong></td><td>{{ fnode.createdOn | date:'r' }}</td></tr>
+          <tr><td><strong>Last Modified:</strong></td><td>{{ fnode.lastModified | date:'r' }}</td></tr>
           <tr><td><strong>UUID:</strong></td><td>{{ fnode.nodeID }}</td></tr>
           <tr><td><strong>SHA-256 HMAC:</strong></td><td>{{ fnode.fileSignature }}</td></tr>
           <tr><td><strong>MIME Type:</strong></td><td>{{ fnode.mimeType }}</td></tr>
@@ -29,13 +29,15 @@
             </form>
           </td></tr>
           <tr><td><strong>Rename:</strong></td><td>
-            <form role="form" action="{% url 'rename' %}" method="POST" class="form-inline">
+            <form role="form" action="{% url 'rename' %}" method="POST">
               {% csrf_token %}
-              <div class="form-group">
-                <input type="hidden" name="node_ID" value="{{ fnode.nodeID }}" />
+              <input type="hidden" name="node_ID" value="{{ fnode.nodeID }}" />
+              <div class="input-group">
                 <input type="text" class="form-control" name="new_name" value="{{ fnode.visibleName }}"/>
+                <span class="input-group-btn">
+                  <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;Rename</button>
+                </span>
               </div>
-              <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;Rename</button>
             </form>
           </td></tr>
           <tr><td><strong>Re-Parent:</strong></td><td>

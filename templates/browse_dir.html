@@ -1,10 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+{% include "breadcrumbs.html" %}
+
 <div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Upload:</h3>
+  </div>
   <div class="panel-body">
-    <form role="form" class="form form-inline" action="/upload/" method="POST" enctype="multipart/form-data">
+    <form role="form" class="form form-inline" action="{% url 'upload' %}" method="POST" enctype="multipart/form-data">
       {% csrf_token %}
+      {% if directory %}
+        <input type="hidden" name="parent" value="{{ directory.nodeID }}" />
+      {% else %}
+        <input type="hidden" name="parent" value="NULL" />
+      {% endif %}
       <div class="form-group">
         <input type="file" name="files" multiple>
       </div>
@@ -13,18 +24,68 @@
   </div>
 </div>
 
-{% include "breadcrumbs.html" %}
-          
+{% if directory %}
+<h3>{{ directory.visibleName }}</h3>
+{% else %}
+<h3>Home</h3>
+{% endif %}
+
 <ul class="list-group">
-  {% for name, size, type, node_id in file_nodes %}
-    <a href="{% url 'browse' node_id %}" class="list-group-item">
+  {% for subdir in subdirs %}
+    <a href="{% url 'browse' subdir.nodeID %}" class="list-group-item">
+      <h4 class="list-group-item-heading">
+        <input type="checkbox">
+        <span class="glyphicon glyphicon-folder-close"></span>
+        {{ subdir.visibleName }}
+      </h4>
+    </a>
+  {% endfor %}
+  {% for fnode in files %}
+    <a href="{% url 'file_app.views.browse' fnode.nodeID %}" class="list-group-item">
       <h4 class="list-group-item-heading">
         <input type="checkbox">
         <span class="glyphicon glyphicon-file"></span>
-        {{ name }}
-        <small>(directory) ({{ size }}) ({{ type }})</small>
+        {{ fnode.visibleName }}
       </h4>
     </a>
   {% endfor %}
 </ul>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Directory Actions:</h3>
+  </div>
+  <div class="panel-body">
+    <form role="form" class="form form-inline" action="{% url 'mkdir' %}" method="POST">
+      {% csrf_token %}
+      {% if directory %}
+        <input type="hidden" name="parent" value="{{ directory.nodeID }}" />
+      {% else %}
+        <input type="hidden" name="parent" value="NULL" />
+      {% endif %}
+      <label for="mkdir_form">New Sub-Directory:</label>
+      <div class="input-group" id="mkdir_form">
+        <input type="text" class="form-control" name="dir_name" placeholder="Untitled Directory"/>
+        <span class="input-group-btn">
+          <button class="btn btn-primary" type="submit">
+            <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Make Directory
+          </button>
+        </span>
+      </div>
+    </form>
+    <br />
+    <form role="form" class="form form-inline" action="#" method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="rmdir_form">Delete:</label>
+        <div class="input-group" id="rmdir_form">
+          <button class="btn btn-danger"  type="submit">
+            <span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Remove Current Directory
+          </button>
+        </div>
+        </div>
+    </form>
+  </div>
+</div>
+
 {% endblock %}

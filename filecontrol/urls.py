@@ -5,12 +5,12 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    url(r'^admin/', include(admin.site.urls)),
-    # Examples:
-    url(r'^', include("file_app.urls")),
-    # url(r'^filecontrol/', include('filecontrol.foo.urls')),
+  url(r'^admin/', include(admin.site.urls)),
+  # Examples:
+  url(r'^', include("file_app.urls")),
+  # url(r'^filecontrol/', include('filecontrol.foo.urls')),
 
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+  # Uncomment the admin/doc line below to enable admin documentation:
+  # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
 )
