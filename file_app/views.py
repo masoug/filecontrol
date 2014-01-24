@@ -155,9 +155,15 @@ def rename(request):
       node_ID = request.POST.get("node_ID")
       new_name = request.POST.get("new_name")
       if node_ID and new_name:
-        fnode = FileNode.objects.get(nodeID=node_ID)
-        fnode.visibleName = new_name
-        fnode.save()
+        fdnode = None
+        if DirNode.objects.filter(nodeID=node_ID).exists():
+          fdnode = DirNode.objects.get(nodeID=node_ID)
+        elif FileNode.objects.filter(nodeID=node_ID).exists():
+          fdnode = FileNode.objects.get(nodeID=node_ID)
+        else:
+          return render(request, "message.html", {"message": "Node ID not found."}, status=400)
+        fdnode.visibleName = new_name
+        fdnode.save()
         return HttpResponseRedirect(reverse("file_app.views.browse", kwargs={"node_id": node_ID}))
       else:
         return render(request, "message.html", {"message": "Node ID and name shouldn't be empty."}, status=400)        
