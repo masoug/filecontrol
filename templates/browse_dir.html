@@ -68,7 +68,7 @@
         <input type="text" class="form-control" name="dir_name" placeholder="Untitled Directory"/>
         <span class="input-group-btn">
           <button class="btn btn-primary" type="submit">
-            <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Make Directory
+            <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Mkdir
           </button>
         </span>
       </div>
@@ -78,12 +78,12 @@
       <form role="form" class="form form-inline" action="{% url 'rename' %}" method="POST">
         {% csrf_token %}
         <input type="hidden" name="node_ID" value="{{ directory.nodeID }}" />
-        <label for="mkdir_form">Rename:</label>
+        <label for="mkdir_form">Rename Current Directory:</label>
         <div class="input-group" id="mkdir_form">
           <input type="text" class="form-control" name="new_name" placeholder="{{ directory.visibleName }}"/>
           <span class="input-group-btn">
             <button class="btn btn-primary" type="submit">
-              <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Rename Current Directory
+              <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Rename
             </button>
           </span>
         </div>
@@ -93,10 +93,10 @@
     <form role="form" class="form form-inline" action="#" method="POST">
       {% csrf_token %}
       <div class="form-group">
-        <label for="rmdir_form">Delete:</label>
+        <label for="rmdir_form">Delete Current Directory:</label>
         <div class="input-group" id="rmdir_form">
           <button class="btn btn-danger"  type="submit">
-            <span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Remove Current Directory
+            <span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Remove
           </button>
         </div>
         </div>

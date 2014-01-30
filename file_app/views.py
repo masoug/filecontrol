@@ -172,6 +172,20 @@ def rename(request):
   else:
     return HttpResponseRedirect("/")
 
+# PRECONDITION: The nodeID must be a DirNode INSTANCE!!!
+def rmdir(nodeID):
+  if FileNode.objects.filter(parent=nodeID).exists():
+    # recursively remove all child FILES
+    pass
+  if DirNode.objects.filter(parent=nodeID).exists() 
+    # recursively remove all child DIRECTORIES
+    pass
+  # finally, remove ME
+
+# PRECONDITION: The nodeID must be a FileNode INSTANCE!!!
+def rmfile(nodeID):
+  pass
+
 @csrf_protect
 def delete(request):
   if request.method == "POST":
