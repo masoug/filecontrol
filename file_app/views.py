@@ -9,8 +9,16 @@ from file_app.models import *
 from file_app.recaptcha import RecaptchaClient
 
 # TODO: These will eventually live in settings.py
-FILE_STORAGE_PATH = "/home/sammy/Web/filecontrol/"
-# make hmac secret as long as the digest
+FILE_STORAGE_PATH = (
+  "/home/sammy/Web/filecontrol/",
+  "/cs/student/masoug/filecontrol",
+)
+for pth in FILE_STORAGE_PATH:
+  if os.path.isdir(pth):
+    FILE_STORAGE_PATH = pth
+    break
+
+# TODO: make hmac secret as long as the digest
 FILE_HMAC_SECRET = b"hmacsecret"
 RECAPTCHA_PUBLIC_KEY = "6LeALu0SAAAAAKJ7blSSdNo_2HG9nh7hMgt4MhnE"
 RECAPTCHA_PRIVATE_KEY = "6LeALu0SAAAAACjaqanZ5gTkv2RVIGRhNn5PQP1X"
