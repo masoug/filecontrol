@@ -90,8 +90,10 @@
       </form>
     <br />
     {% endif %}
-    <form role="form" class="form form-inline" action="#" method="POST">
+    {% if directory %}
+    <form role="form" class="form form-inline" action="{% url 'delete' %}" method="POST">
       {% csrf_token %}
+      <input type="hidden" name="node_ID" value="{{ directory.nodeID }}" />
       <div class="form-group">
         <label for="rmdir_form">Delete:</label>
         <div class="input-group" id="rmdir_form">
@@ -101,6 +103,7 @@
         </div>
         </div>
     </form>
+    {% endif %}
   </div>
 </div>
 

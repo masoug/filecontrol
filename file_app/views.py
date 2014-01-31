@@ -111,9 +111,6 @@ def browse(request, node_id):
     else:
       ctx["breadcrumbs"] = list()
     ctx["fnode"] = fnode
-    # handle captcha
-    captcha_client = RecaptchaClient(RECAPTCHA_PRIVATE_KEY, RECAPTCHA_PUBLIC_KEY)
-    ctx["captcha_code"] = captcha_client.get_challenge_markup(use_ssl=True)
     return render(request, "browse_file.html", ctx)
   else:
     # then list root directory
@@ -180,33 +177,45 @@ def rename(request):
   else:
     return HttpResponseRedirect("/")
 
+# delete a FileNode INSTANCE!
+def rmFileNode(fileNode):
+  filePath = os.path.join(FILE_STORAGE_PATH, fileNode.nodeID)
+  if os.path.isfile(filePath):
+    os.remove(filePath)
+    parent = fileNode.parent
+    fileNode.delete()
+    return parent
+  else:
+    raise Exception("File (%s) not found on filesystem!" % (fileNode.nodeID,))
+
+# delete a DirNode INSTANCE!
+def rmDirNode(dirNode):
+  fchildren = FileNode.objects.filter(parent=dirNode)
+  for fchild in fchildren:
+    rmFileNode(fchild)
+  dchildren = DirNode.objects.filter(parent=dirNode)
+  for dchild in dchildren:
+    rmDirNode(dchild)
+  parent = dirNode.parent
+  dirNode.delete()
+  return parent
+
 @csrf_protect
 def delete(request):
   if request.method == "POST":
     try:
       # Delete file/directory and all its children
-      # check captcha
-      captcha_client = RecaptchaClient(RECAPTCHA_PRIVATE_KEY, RECAPTCHA_PUBLIC_KEY)
-      if captcha_client.is_solution_correct(
-          request.POST.get("recaptcha_response_field"),
-          request.POST.get("recaptcha_challenge_field"),
-          request.META['REMOTE_ADDR']):
-        # delete object
-        node_ID = request.POST.get("node_ID")
-        canFilePath = os.path.join(FILE_STORAGE_PATH, node_ID)
-        if os.path.isfile(canFilePath):
-          os.remove(canFilePath)
-          fnode = FileNode.objects.get(nodeID=node_ID)
-          parent = fnode.parent
-          fnode.delete()
-          if parent:
-            return HttpResponseRedirect(reverse("file_app.views.browse", kwargs={"node_id": parent.nodeID}))
-          else:
-            return HttpResponseRedirect(reverse("file_app.views.index"))
-        else:
-          return render(request, "message.html", {"message": "File not found in filesystem."}, status=500)
+      # delete object
+      node_ID = request.POST.get("node_ID")
+      parent = None
+      if FileNode.objects.filter(nodeID=node_ID).exists():
+        parent = rmFileNode(FileNode.objects.get(nodeID=node_ID))
+      elif DirNode.objects.filter(nodeID=node_ID).exists():
+        parent = rmDirNode(DirNode.objects.get(nodeID=node_ID))
+      if parent:
+        return HttpResponseRedirect(reverse("file_app.views.browse", kwargs={"node_id": parent.nodeID}))
       else:
-        return render(request, "message.html", {"message": "Invalid solution to recaptcha."}, status=400)
+        return HttpResponseRedirect(reverse("file_app.views.index"))
     except Exception as e:
       return render(request, "message.html", {"message": str(e)}, status=400)
   else:
