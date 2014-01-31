@@ -57,9 +57,6 @@
             <form role="form" action="{% url 'delete' %}" method="POST" class="form-inline">
               {% csrf_token %}
               <input type="hidden" name="node_ID" value="{{ fnode.nodeID }}" />
-              <div class="form-group">
-                {{ captcha_code | safe }}
-              </div>
               <button type="submit" class="btn btn-danger"/><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Delete</button>
             </form>
           </td></tr>
