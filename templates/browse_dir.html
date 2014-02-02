@@ -30,26 +30,24 @@
 <h3>Home</h3>
 {% endif %}
 
-<ul class="list-group">
+<div class="list-group">
   {% for subdir in subdirs %}
     <a href="{% url 'browse' subdir.nodeID %}" class="list-group-item">
       <h4 class="list-group-item-heading">
-        <input type="checkbox">
         <span class="glyphicon glyphicon-folder-close"></span>
         {{ subdir.visibleName }}
       </h4>
     </a>
   {% endfor %}
   {% for fnode in files %}
-    <a href="{% url 'file_app.views.browse' fnode.nodeID %}" class="list-group-item">
+    <a href="{% url 'browse' fnode.nodeID %}" class="list-group-item">
       <h4 class="list-group-item-heading">
-        <input type="checkbox">
         <span class="glyphicon glyphicon-file"></span>
         {{ fnode.visibleName }}
       </h4>
     </a>
   {% endfor %}
-</ul>
+</div>
 
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -64,10 +62,10 @@
         <input type="hidden" name="parent" value="NULL" />
       {% endif %}
       <label for="mkdir_form">New Sub-Directory:</label>
-      <div class="input-group" id="mkdir_form">
+      <div class="input-group">
         <input type="text" class="form-control" name="dir_name" placeholder="Untitled Directory"/>
         <span class="input-group-btn">
-          <button class="btn btn-primary" type="submit">
+          <button class="btn btn-primary" id="mkdir_form" type="submit">
             <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Mkdir
           </button>
         </span>
@@ -86,6 +84,25 @@
               <span class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;Rename
             </button>
           </span>
+        </div>
+      </form>
+    <br />
+    {% endif %}
+    {% if directory %}
+      <form role="form" class="form form-inline" action="{% url 'move' %}" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="node_ID" value="{{ directory.nodeID }}" />
+        <label for="mv_form">Move Current Directory:</label>
+        <div class="form-group" id="mv_form">
+          <select class="form-control" name="target_ID">
+            {% for tgs in move_targets %}
+              <option value="{{ tgs.nodeID }}">{{ tgs.visibleName }}</option>
+            {% endfor %}
+            <option value="NULL">HOME!</option>
+          </select>
+          <button class="btn btn-primary" type="submit">
+            <span class="glyphicon glyphicon-new-window"></span>&nbsp;&nbsp;Move
+          </button>
         </div>
       </form>
     <br />

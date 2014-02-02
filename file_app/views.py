@@ -78,7 +78,10 @@ class DirectFileHandler(FileUploadHandler):
     self.currentFile = open(self.currentFilename, "wb")
     self.fileModel = FileNode()
     self.fileModel.nodeID = fileID
-    self.fileModel.visibleName = file_name
+    if not file_name:
+      self.fileModel.visibleName = "Untitled File"
+    else:
+      self.fileModel.visibleName = file_name
     self.fileModel.mimeType = content_type
 
   def upload_complete(self):
@@ -87,6 +90,11 @@ class DirectFileHandler(FileUploadHandler):
 
 def index(request):
   return browse(request, None)
+
+def getAllSubdirs(root, currList):
+  for subdir in DirNode.objects.filter(parent=root):
+    getAllSubdirs(subdir, currList)
+  currList.append(root.nodeID)
 
 def browse(request, node_id):
   # returns directory listing if node_id is a directory
@@ -102,6 +110,11 @@ def browse(request, node_id):
     ctx["directory"] = directory
     ctx["subdirs"] = subdirs
     ctx["files"] = files
+
+    # Show move targets
+    invTargets = list()
+    getAllSubdirs(directory, invTargets)
+    ctx["move_targets"] = DirNode.objects.all().exclude(nodeID__in=invTargets)
     return render(request, "browse_dir.html", ctx)
   elif FileNode.objects.filter(nodeID=node_id).exists():
     # then list file
@@ -111,14 +124,14 @@ def browse(request, node_id):
     else:
       ctx["breadcrumbs"] = list()
     ctx["fnode"] = fnode
+    ctx["move_targets"] = DirNode.objects.all()
     return render(request, "browse_file.html", ctx)
   else:
     # then list root directory
-    directory = None
     subdirs = DirNode.objects.filter(parent=None)
     files = FileNode.objects.filter(parent=None)
     ctx["breadcrumbs"] = list()
-    ctx["directory"] = directory
+    ctx["directory"] = None
     ctx["subdirs"] = subdirs
     ctx["files"] = files
     return render(request, "browse_dir.html", ctx)
@@ -134,6 +147,8 @@ def mkdir(request):
     try:
       parentID = request.POST.get("parent")
       name = request.POST.get("dir_name")
+      if not name:
+        name = "Untitled Directory"
       new_dir = DirNode()
       new_dir.nodeID = str(uuid.uuid4().hex)
       new_dir.visibleName = name
@@ -212,10 +227,42 @@ def delete(request):
         parent = rmFileNode(FileNode.objects.get(nodeID=node_ID))
       elif DirNode.objects.filter(nodeID=node_ID).exists():
         parent = rmDirNode(DirNode.objects.get(nodeID=node_ID))
+      else:
+        return render(request, "message.html", {"message": "node_ID not found."}, status=400)
       if parent:
         return HttpResponseRedirect(reverse("file_app.views.browse", kwargs={"node_id": parent.nodeID}))
       else:
         return HttpResponseRedirect(reverse("file_app.views.index"))
+    except Exception as e:
+      return render(request, "message.html", {"message": str(e)}, status=400)
+  else:
+    return HttpResponseRedirect("/")
+
+@csrf_protect
+def move(request):
+  if request.method == "POST":
+    try:
+      node_ID = request.POST.get("node_ID")
+      target_ID = request.POST.get("target_ID")
+      if node_ID == target_ID:
+        return render(request, "message.html", {"message": "Cannot move directory to itself!"}, status=400)
+      nodeObj = None
+      if FileNode.objects.filter(nodeID=node_ID).exists():
+        nodeObj = FileNode.objects.get(nodeID=node_ID)
+      elif DirNode.objects.filter(nodeID=node_ID).exists():
+        nodeObj = DirNode.objects.get(nodeID=node_ID)
+        invTargets = list()
+        getAllSubdirs(nodeObj, invTargets)
+        if target_ID in invTargets:
+          return render(request, "message.html", {"message": "Cannot move directory to descendent!"}, status=400)
+      else:
+        return render(request, "message.html", {"message": "node_ID not found."}, status=400)
+      if DirNode.objects.filter(nodeID=target_ID).exists():
+        nodeObj.parent = DirNode.objects.get(nodeID=target_ID)
+      else:
+        nodeObj.parent = None
+      nodeObj.save()
+      return HttpResponseRedirect(reverse("file_app.views.browse", kwargs={"node_id": node_ID}))
     except Exception as e:
       return render(request, "message.html", {"message": str(e)}, status=400)
   else:

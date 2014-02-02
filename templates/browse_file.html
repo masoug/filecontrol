@@ -20,14 +20,6 @@
             <a href="https://app.box.com/s/uw8keex3k0j7d98gy0ha" target="_blank">https://app.box.com/s/uw8keex3k0j7d98gy0ha</a>
             &nbsp;(<a href="">About mirrored files</a>)
           </td></tr>
-          <tr><td><strong>Slug:</strong></td><td>
-            <form role="form" class="form-inline">
-              <div class="form-group" />
-                <input type="text" class="form-control" name="slug_value" value="my-file" />
-              </div>
-              <button type="submit" class="btn btn-primary">Update</button>
-            </form>
-          </td></tr>
           <tr><td><strong>Rename:</strong></td><td>
             <form role="form" action="{% url 'rename' %}" method="POST">
               {% csrf_token %}
@@ -40,12 +32,19 @@
               </div>
             </form>
           </td></tr>
-          <tr><td><strong>Re-Parent:</strong></td><td>
-            <form role="form" class="form-inline">
-              <div class="form-group" />
-                <input type="text" class="form-control" name="parent_value" value="00000000000000000000000000000000" />
+          <tr><td><strong>Move</strong></td><td>
+            <form role="form" class="form-inline" action="{% url 'move' %}" method="POST">
+              {% csrf_token %}
+              <input type="hidden" name="node_ID" value="{{ fnode.nodeID }}" />
+              <div class="form-group">
+                <select class="form-control" name="target_ID">
+                  {% for tgs in move_targets %}
+                    <option value="{{ tgs.nodeID }}">{{ tgs.visibleName }}</option>
+                  {% endfor %}
+                  <option value="NULL">HOME!</option>
+                </select>
               </div>
-              <button type="submit" class="btn btn-primary">Re-Parent</button>
+              <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-new-window"></span>&nbsp;&nbsp;Move</button>
             </form>
           </td></tr>
           <tr><td><strong>Download:</strong></td><td>
@@ -57,7 +56,7 @@
             <form role="form" action="{% url 'delete' %}" method="POST" class="form-inline">
               {% csrf_token %}
               <input type="hidden" name="node_ID" value="{{ fnode.nodeID }}" />
-              <button type="submit" class="btn btn-danger"/><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Delete</button>
+              <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Delete</button>
             </form>
           </td></tr>
           <tr><td><strong>Access Controls:</strong></td><td>
