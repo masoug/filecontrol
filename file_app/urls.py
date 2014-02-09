@@ -8,6 +8,8 @@ urlpatterns = patterns('',
   url(r"^rename/$", views.rename, name="rename"),
   url(r"^mkdir/$", views.mkdir, name="mkdir"),
   url(r"^move/$", views.move, name="move"),
+  url(r"^login/$", views.login_view, name="login"),
+  url(r"^logout/$", views.logout_view, name="logout"),
   url(r"^(?P<node_id>[0-9a-f]{32})/$", views.browse, name="browse"),
   url(r"^(?P<slug>[a-z-]+)/$", views.slug, name="slug"),
 )

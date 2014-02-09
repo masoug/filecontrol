@@ -9,6 +9,9 @@ ADMINS = (
 
 #FILE_UPLOAD_TEMP_DIR = "/home/sammy/Web/filecontrol/temp"
 
+# Login URL
+LOGIN_URL = "/login"
+
 MANAGERS = ADMINS
 
 DATABASES = {

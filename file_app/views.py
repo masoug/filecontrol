@@ -3,6 +3,8 @@ from django.shortcuts import render
 from django.core.files.uploadhandler import FileUploadHandler
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.core.urlresolvers import reverse
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout
 import os, uuid
 from Crypto.Hash import HMAC, SHA256
 from file_app.models import *
@@ -20,8 +22,6 @@ for pth in FILE_STORAGE_PATH:
 
 # TODO: make hmac secret as long as the digest
 FILE_HMAC_SECRET = b"hmacsecret"
-RECAPTCHA_PUBLIC_KEY = "6LeALu0SAAAAAKJ7blSSdNo_2HG9nh7hMgt4MhnE"
-RECAPTCHA_PRIVATE_KEY = "6LeALu0SAAAAACjaqanZ5gTkv2RVIGRhNn5PQP1X"
 
 # user-friendly file sizes
 # from http://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
@@ -96,6 +96,7 @@ def getAllSubdirs(root, currList):
     getAllSubdirs(subdir, currList)
   currList.append(root.nodeID)
 
+@login_required
 def browse(request, node_id):
   # returns directory listing if node_id is a directory
   # else returns a file page
@@ -140,6 +141,7 @@ def slug(request, slug):
   # redirect to browse by looking up slug
   return HttpResponseRedirect("/")
 
+@login_required
 @csrf_protect
 def mkdir(request):
   # make directory
@@ -168,6 +170,7 @@ def mkdir(request):
   else:
     return HttpResponseRedirect("/")
 
+@login_required
 @csrf_protect
 def rename(request):
   if request.method == "POST":
@@ -215,6 +218,7 @@ def rmDirNode(dirNode):
   dirNode.delete()
   return parent
 
+@login_required
 @csrf_protect
 def delete(request):
   if request.method == "POST":
@@ -238,6 +242,7 @@ def delete(request):
   else:
     return HttpResponseRedirect("/")
 
+@login_required
 @csrf_protect
 def move(request):
   if request.method == "POST":
@@ -268,6 +273,35 @@ def move(request):
   else:
     return HttpResponseRedirect("/")
 
+def login_view(request):
+  if request.method == "POST":
+    try:
+      # handle login attempt
+      user = authenticate(
+        username=request.POST.get("username"),
+        password=request.POST.get("password"))
+      if user is not None:
+        if user.is_active:
+          login(request, user)
+          return HttpResponseRedirect(reverse("file_app.views.index"))
+        else:
+          return render(request, "message.html", {"message": "LOGIN DISABLED"}, status=400)
+      else:
+        return render(request, "message.html", {"message": "Invalid credentials!"}, status=400)
+        # TODO: Add Pushover message for invalid login attempts
+    except Exception as e:
+      return render(request, "message.html", {"message": "Invalid POST request! ("+str(e)+")"}, status=400)
+  else:
+    # render login page or redirect to index
+    if request.user.is_authenticated():
+      return HttpResponseRedirect(reverse("file_app.views.index"))
+    else:
+      return render(request, "login.html")
+
+def logout_view(request):
+  logout(request)
+  return HttpResponseRedirect(reverse("file_app.views.index"))
+
 @csrf_protect
 def _upload(request, newModels):
   # redirect to newly-uploaded file
@@ -287,6 +321,7 @@ def _upload(request, newModels):
   except Exception as e:
     return render(request, "message.html", {"message": "Error uploading file: "+str(e)}, status=400)
 
+@login_required
 @csrf_exempt
 def upload(request):
   newModels = list()
