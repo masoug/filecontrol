@@ -22,6 +22,7 @@
     font-weight: normal;
   }
   .form-signin .form-control {
+    text-align: center;
     position: relative;
     font-size: 16px;
     height: auto;
@@ -33,15 +34,22 @@
   .form-signin .form-control:focus {
     z-index: 2;
   }
-  .form-signin input[type="email"] {
+  .form-signin input[id="form-username"] {
     margin-bottom: -1px;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
   }
-  .form-signin input[type="password"] {
+  .form-signin input[id="otcode"] {
     margin-bottom: 10px;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
+  }
+  .form-signin input[id="password"] {
+    margin-bottom: -1px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   }
 </style>
 
@@ -51,8 +59,9 @@
     File Control Login
   </h2>
   {% csrf_token %}
-  <input type="text" name="username" class="form-control" placeholder="Username" required autofocus>
-  <input type="password" name="password" class="form-control" placeholder="Password" required>
+  <input type="text" name="username" class="form-control" id="form-username" placeholder="Username" required autofocus>
+  <input type="password" name="password" class="form-control" id="password" placeholder="Password" required>
+  <input type="text" name="otcode" class="form-control" id="otcode" placeholder="Authentication Code" required>
   <button class="btn btn-lg btn-primary btn-block" type="submit">
     <span class="glyphicon glyphicon-log-in"></span>&nbsp;
     Login

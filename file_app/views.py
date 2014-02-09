@@ -6,7 +6,9 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 import os, uuid
-from Crypto.Hash import HMAC, SHA256
+#from Crypto.Hash import HMAC, SHA256
+import hmac, hashlib
+import time, struct, base64
 from file_app.models import *
 from file_app.recaptcha import RecaptchaClient
 
@@ -22,6 +24,36 @@ for pth in FILE_STORAGE_PATH:
 
 # TODO: make hmac secret as long as the digest
 FILE_HMAC_SECRET = b"hmacsecret"
+
+# handle two-factor auth:
+# code borrowed from: http://www.brool.com/index.php/using-google-authenticator-for-your-website
+# TODO: each secret should be unique to each user, so put this in the database (encrypted, of course)!
+TOTP_SECRET = "K6I2BLFRA4WCIEJK"
+def check_totp(code_attempt):
+  tm = int(time.time() / 30)
+  secretkey = base64.b32decode(TOTP_SECRET)
+
+  # try 30 seconds behind and ahead as well
+  for ix in [-1, 0, 1]:
+      # convert timestamp to raw bytes
+      b = struct.pack(">q", tm + ix)
+
+      # generate HMAC-SHA1 from timestamp based on secret key
+      hm = hmac.HMAC(secretkey, b, hashlib.sha1).digest()
+
+      # extract 4 bytes from digest based on LSB
+      offset = ord(hm[-1]) & 0x0F
+      truncatedHash = hm[offset:offset+4]
+
+      # get the code from it
+      code = struct.unpack(">L", truncatedHash)[0]
+      code &= 0x7FFFFFFF;
+      code %= 1000000;
+
+      if ("%06d" % code) == str(code_attempt):
+          return True
+
+  return False
 
 # user-friendly file sizes
 # from http://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
@@ -50,7 +82,7 @@ def gen_breadcrumbs(node_id, currList=None):
 class DirectFileHandler(FileUploadHandler): 
   # TODO: Add try-excepts to handle any errors gracefully!
   def __init__(self, newModels):
-    self.hasher = HMAC.new(FILE_HMAC_SECRET, digestmod=SHA256)
+    self.hasher = hmac.new(FILE_HMAC_SECRET, digestmod=hashlib.sha256)
     self.currentFilename = str()
     self.currentFile = None
     self.fileModel = None
@@ -64,7 +96,7 @@ class DirectFileHandler(FileUploadHandler):
   def file_complete(self, file_size):
     digest = str(self.hasher.hexdigest())
     print "%s uploaded; %s %s" % (self.currentFilename, digest, str(file_size))
-    self.hasher = HMAC.new(FILE_HMAC_SECRET, digestmod=SHA256)
+    self.hasher = hmac.new(FILE_HMAC_SECRET, digestmod=hashlib.sha256)
     self.currentFile.close()
     self.fileModel.fileSize = file_size
     self.fileModel.fileSignature = digest
@@ -280,6 +312,9 @@ def login_view(request):
       user = authenticate(
         username=request.POST.get("username"),
         password=request.POST.get("password"))
+      if not check_totp(request.POST.get("otcode")):
+        # TODO: Add pushover signal!
+        return render(request, "message.html", {"message": "TOTP verification failed!"}, status=400)
       if user is not None:
         if user.is_active:
           login(request, user)
@@ -287,8 +322,8 @@ def login_view(request):
         else:
           return render(request, "message.html", {"message": "LOGIN DISABLED"}, status=400)
       else:
-        return render(request, "message.html", {"message": "Invalid credentials!"}, status=400)
         # TODO: Add Pushover message for invalid login attempts
+        return render(request, "message.html", {"message": "Invalid credentials!"}, status=400)
     except Exception as e:
       return render(request, "message.html", {"message": "Invalid POST request! ("+str(e)+")"}, status=400)
   else:
