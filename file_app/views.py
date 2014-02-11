@@ -132,7 +132,9 @@ def getAllSubdirs(root, currList):
 def browse(request, node_id):
   # returns directory listing if node_id is a directory
   # else returns a file page
-  ctx = {}
+  ctx = {
+    "user": request.user
+  }
   # is the supplied node_id a directory?
   if DirNode.objects.filter(nodeID=node_id).exists():
     # then list directory
@@ -314,7 +316,7 @@ def login_view(request):
         password=request.POST.get("password"))
       if not check_totp(request.POST.get("otcode")):
         # TODO: Add pushover signal!
-        return render(request, "message.html", {"message": "TOTP verification failed!"}, status=400)
+        return render(request, "message.html", {"message": "Invalid credentials!"}, status=400)
       if user is not None:
         if user.is_active:
           login(request, user)
