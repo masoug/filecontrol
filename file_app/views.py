@@ -28,10 +28,9 @@ FILE_HMAC_SECRET = b"hmacsecret"
 # handle two-factor auth:
 # code borrowed from: http://www.brool.com/index.php/using-google-authenticator-for-your-website
 # TODO: each secret should be unique to each user, so put this in the database (encrypted, of course)!
-TOTP_SECRET = "K6I2BLFRA4WCIEJK"
-def check_totp(code_attempt):
+def check_totp(secret_code, code_attempt):
   tm = int(time.time() / 30)
-  secretkey = base64.b32decode(TOTP_SECRET)
+  secretkey = base64.b32decode(secret_code)
 
   # try 30 seconds behind and ahead as well
   for ix in [-1, 0, 1]:
@@ -314,10 +313,13 @@ def login_view(request):
       user = authenticate(
         username=request.POST.get("username"),
         password=request.POST.get("password"))
-      if not check_totp(request.POST.get("otcode")):
-        # TODO: Add pushover signal!
-        return render(request, "message.html", {"message": "Invalid credentials!"}, status=400)
       if user is not None:
+        if not UserTOTP.objects.filter(user=user).exists():
+          # TODO: Add pushover signal!
+          return render(request, "message.html", {"message": "Invalid credentials!"}, status=500)
+        if not check_totp(UserTOTP.objects.get(user=user).secretKey, request.POST.get("otcode")):
+          # TODO: Add pushover signal!
+          return render(request, "message.html", {"message": "Invalid credentials!"}, status=400)
         if user.is_active:
           login(request, user)
           return HttpResponseRedirect(reverse("file_app.views.index"))
