@@ -11,6 +11,7 @@ import hmac, hashlib
 import time, struct, base64
 from file_app.models import *
 from file_app.recaptcha import RecaptchaClient
+import pushover
 
 # TODO: These will eventually live in settings.py
 FILE_STORAGE_PATH = (
@@ -315,10 +316,11 @@ def login_view(request):
         password=request.POST.get("password"))
       if user is not None:
         if not UserTOTP.objects.filter(user=user).exists():
-          # TODO: Add pushover signal!
+          pushover.push_improper_user(user.username)
           return render(request, "message.html", {"message": "Invalid credentials!"}, status=500)
         if not check_totp(UserTOTP.objects.get(user=user).secretKey, request.POST.get("otcode")):
-          # TODO: Add pushover signal!
+          # TODO: add ipaddress field
+          pushover.push_failed_totp("IPADDRESS", user.username)
           return render(request, "message.html", {"message": "Invalid credentials!"}, status=400)
         if user.is_active:
           login(request, user)
@@ -326,7 +328,8 @@ def login_view(request):
         else:
           return render(request, "message.html", {"message": "LOGIN DISABLED"}, status=400)
       else:
-        # TODO: Add Pushover message for invalid login attempts
+        # TODO: add ipaddress field
+        pushover.push_failed_login("IPADDRESS", request.POST.get("username"))
         return render(request, "message.html", {"message": "Invalid credentials!"}, status=400)
     except Exception as e:
       return render(request, "message.html", {"message": "Invalid POST request! ("+str(e)+")"}, status=400)
