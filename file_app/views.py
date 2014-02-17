@@ -323,6 +323,8 @@ def login_view(request):
           pushover.push_failed_totp("IPADDRESS", user.username)
           return render(request, "message.html", {"message": "Invalid credentials!"}, status=400)
         if user.is_active:
+          # TODO: add ipaddress field
+          pushover.push_success_login("IPADDRESS", user.username)
           login(request, user)
           return HttpResponseRedirect(reverse("file_app.views.index"))
         else:

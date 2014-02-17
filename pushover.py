@@ -23,6 +23,16 @@ def push_raw(title, message):
     print "Reason:", resp.reason
     print "Message:", resp.msg
 
+def push_success_login(ipaddress, username, addendum=None):
+  message = "Successful login attempt from "
+  message += ipaddress
+  message += " as "
+  message += username
+  if addendum:
+    message += "; "
+    message += addendum
+  push_raw("Login Success", message)
+
 def push_failed_login(ipaddress, username, addendum=None):
   message = "Failed login attempt from "
   message += ipaddress
